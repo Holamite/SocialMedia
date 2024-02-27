@@ -24,6 +24,7 @@ contract Social {
     Group[] groupMembers;
 
     mapping(uint256 => Group) public groups;
+    mapping(uint256 => bool) public flaggedContent;
 
     uint256 public nextGroupId = 1;
 
@@ -80,8 +81,7 @@ contract Social {
         return (group.id, group.title, group.description, group.members);
     }
 
-    function nftInteraction(
-        string memory _tokenName,
-        string memory _tokenSymbol
-    ) external {
+    function flagContent(uint256 _groupId) external onlyOwner {
+        flaggedContent[_groupId] = true;
+    }
 }
