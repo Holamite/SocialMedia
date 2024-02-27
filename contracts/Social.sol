@@ -5,18 +5,26 @@ import "./NFTFactory.sol";
 contract Social {
     address owner;
 
+    NFTFactory public nftFactoryContract;
+
+    struct User {
+        bool isRegistered;
+        string role;
+    }
+
+    mapping(address => User) users;
+
     struct Group {
         uint256 id;
         string title;
         string description;
         address[] members;
-        mapping(address => bool) isMember;
-        mapping(uint256 => bool) nfts;
+        // mapping(uint256 => bool) nfts;
     }
+    Group[] groupMembers;
 
     mapping(uint256 => Group) public groups;
 
-    NFTFactory public nftFactoryContract;
     uint256 public nextGroupId = 1;
 
     constructor(address _nftFactoryAddress) {
@@ -29,12 +37,17 @@ contract Social {
         _;
     }
 
-    modifier onlyMember(uint256 _groupId) {
-        require(
-            groups[_groupId].isMember[msg.sender],
-            "Not a member of the group"
-        );
-        _;
+    function authenticateUser(string memory _role) external {
+        require(!users[msg.sender].isRegistered, "User already exist");
+
+        users[msg.sender] = User(true, _role);
+    }
+
+    function viewAuthenticationStatus(
+        address _userAddress
+    ) external view returns (bool isRegistered, string memory role) {
+        User memory user = users[_userAddress];
+        return (user.isRegistered, user.role);
     }
 
     function createGroup(
@@ -45,7 +58,30 @@ contract Social {
         newGroup.id = nextGroupId;
         newGroup.title = _title;
         newGroup.description = _description;
-        newGroup.members.push(msg.sender);
+        groupMembers.push(newGroup);
         nextGroupId++;
     }
+
+    function viewGroup(
+        uint256 _groupId
+    )
+        external
+        view
+        returns (
+            uint256 id,
+            string memory title,
+            string memory description,
+            address[] memory members
+        )
+    {
+        require(_groupId < nextGroupId, "Group does not exist");
+
+        Group storage group = groups[_groupId];
+        return (group.id, group.title, group.description, group.members);
+    }
+
+    function nftInteraction(
+        string memory _tokenName,
+        string memory _tokenSymbol
+    ) external {
 }
